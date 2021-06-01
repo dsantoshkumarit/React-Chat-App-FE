@@ -1,13 +1,44 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import makeToast from "../Toaster";
 
 export default function DashboardPage(props) {
   const [chatrooms, setChatrooms] = useState([]);
+  const chatroomNameRef = React.createRef();
+
+  const createChatRoom = () => {
+    let chatroomname = chatroomNameRef.current.value;
+    axios
+      .post(
+        "https://node-chat-app-be.herokuapp.com/chatroom",
+        {
+          name: chatroomname,
+        },
+        {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("CC_Token"),
+          },
+        }
+      )
+      .then((response) => {
+        makeToast("success", response.data.message);
+        getChatrooms();
+      })
+      .catch((err) => {
+        if (
+          err &&
+          err.response &&
+          err.response.data &&
+          err.response.data.message
+        )
+          makeToast("error", err.response.data.message);
+      });
+  };
 
   const getChatrooms = () => {
     axios
-      .get("https://node-chat-app-be.herokuapp.com/chatroom", {
+      .get("http://localhost:3000/chatroom", {
         headers: {
           Authorization: "Bearer " + localStorage.getItem("CC_Token"),
         },
@@ -36,9 +67,10 @@ export default function DashboardPage(props) {
             name="chatroomName"
             id="chatroomName"
             placeholder="Avengers Den"
+            ref={chatroomNameRef}
           />
         </div>
-        <button>Create Chatroom</button>
+        <button onClick={createChatRoom}>Create Chatroom</button>
         <div className="chatrooms">
           {chatrooms.map((chatroom) => (
             <div key={chatroom._id} className="chatroom">
